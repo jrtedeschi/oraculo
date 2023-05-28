@@ -5,64 +5,60 @@ from chromadb.config import Settings
 from rich import print
 from pathlib import Path
 import yaml
-from functions.audio import audio_to_text
+from oraculo.functions.audio import audio_to_text
+from oraculo.functions.data import create_embeddings, get_collections
+from typing_extensions import Annotated
+from enum import Enum
+import logging
 
-
+logging.basicConfig(level=logging.INFO)
 
 APP_NAME = "oraculo"
 app = typer.Typer()
 
 app_dir = typer.get_app_dir(APP_NAME)
-config_path: Path = Path(app_dir)/ "config/config.yaml"
+config_path: Path = Path(app_dir) / "config/config.yaml"
 
-# @app.command()
-# def init():
-#     print(":crystal_ball: Hi there, this is [bold blue]Mana![/bold blue]")
-#     if not config_path.is_file():
-#         print("Config file doesn't exist yet")
-#         print("Creating config file... Just click [bold]Enter[/bold] if you want to use the default values")
-#         project_name = typer.prompt("Name of the project: ", default="My Project")
-#         db_folder = typer.prompt("Database folder: ", default=None)
-#         download_dummy_data = typer.confirm("Download dummy data? ", default=True)
+Collections = Enum("Collections", get_collections())
 
-#         config = {
-#             "project_name": project_name,
-#             "download_dummy_data": download_dummy_data,
-#             "database" : {"folder": db_folder,},
-#             "webapp": {"port": 8501}
-#         }   
-#         config_path.parent.mkdir(parents=True, exist_ok=True)
-#         with open(config_path, "w") as f:
-#             yaml.dump(config, f)
-#         print(f":sparkles: Config file created at {config_path}")
-#     else:
-#         print(f":check_mark_button: Config file already exists at {config_path}")
-
-#     print("Initializing database... :card_index_dividers:")
-
-    
-
-#     with open(config_path, "r") as f:
-#         config = yaml.load(f, Loader=yaml.SafeLoader)
-
-#     client = chromadb.Client(Settings(
-#         chroma_db_impl="duckdb+parquet",))
-    
-    
-#     if "youtube-transcriptions" not in client.list_collections() and config["download_dummy_data"]:
-#         print("Downloading dummy data: youtube-transcriptions... :floppy_disk:")
-
-#         data = get_dummy_dataset()
-#         collection = client.create_collection("youtube-transcriptions")
 
 @app.command()
-def transcribe():
+def transcribe(
+    embeddings: Annotated[
+        bool,
+        typer.Option(
+            help="Create embeddings from the segments of the transcription and persists them to a vector database."
+        ),
+    ] = False,
+):
     path = typer.prompt("Path to audio file: ", default=None)
-    language = typer.prompt("Input Audio Language: ", default="en-US")
-    model = typer.prompt("Model: ", default="large-v2")
+    language = typer.prompt("Input Audio Language: ", default="pt")
+    model = typer.prompt("Model: ", default="base")
     output = typer.prompt("Output file: ", default=None)
-    
-    audio_to_text(path, language, model, output)
+    metadata = {}
+
+    if embeddings:
+        embeddings = typer.confirm("Create embeddings? ", default=True)
+        if Collections == []:
+            typer.echo("No collections found.")
+            create = typer.confirm("Create new collection? ", default=True)
+            if create:
+                collection = typer.prompt("Set Collection: ", default=None)
+                if collection not in Collections:
+                    typer.echo("Collection does not exist. Creating new collection.")
+                metadata = {"collection_name": collection}
+            else:
+                collection = typer.prompt("Set Collection: ", type=str)
+                metadata = {"collection_name": collection}
+        else:
+            collection = typer.prompt("Set Collection: ", type=str)
+            metadata = {"collection_name": collection}
+
+    else:
+        embeddings = False
+
+    typer.echo("Transcribing... :floppy_disk:")
+    audio_to_text(path, language, model, output, embeddings, metadata)
 
 
 @app.command()
