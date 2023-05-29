@@ -1,0 +1,8 @@
+*.pkl
+*.bin
+*.parquet
+*.gz
+*.whl
+*.pyc
+*.mp3
+*.Identifier
