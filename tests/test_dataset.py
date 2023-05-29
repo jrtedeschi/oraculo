@@ -1,15 +1,16 @@
-from oraculo.functions.data import get_dummy_dataset, embed_documents, split_text, embed_text
+from oraculo.functions.audio import audio_to_text
 from tqdm import tqdm
 import chromadb
 from chromadb.config import Settings
 import hashlib
 import logging
 from contextlib import closing
+from oraculo.functions.data import get_collections
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-# data = get_dummy_dataset()        
+# data = get_dummy_dataset()
 
 # new_data = []
 
@@ -27,26 +28,40 @@ logger = logging.getLogger()
 #         'start': data[i]['start'],
 #         'end': data[i_end]['end'],
 #         'title': data[i]['title'],
-#         'text': text,  
+#         'text': text,
 #         'id': hashlib.md5(data[i]['id'].encode("utf-8")).hexdigest(),
 #         'source_url': data[i]['url'],
 #         'published': data[i]['published']
 #     })
 
-
-client = chromadb.Client(Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet"))
 # collection = client.create_collection("youtube-transcriptions")
-# client.create_collection("youtube-transcriptions")
 
-# client.delete_collection("youtube-transcriptions")
 
 # print("Embedding documents...")
 # for i in tqdm(range(0, 30)):
 #     new_data[i].update({'embeddings': embed_text(new_data[i]['text'])})
 
 # update new_data to range 200
+client = chromadb.Client(
+    Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
+)
 
-collection = client.get_collection("youtube-transcriptions")
+# client.delete_collection("teste")
+# client.list_collections()
+
+# audio_to_text(
+#     path="/home/jrtedeschi/projetos/Gravando.m4a",
+#     language="pt",
+#     model="base",
+#     output="/home/jrtedeschi/projetos/Gravando.txt",
+#     embeddings=True,
+#     metadata={"collection_name": "teste"},
+# )
+# del client
+# del collection
+
+
+print("list collections", get_collections(client))
 
 # collection.add(
 #     ids=[doc['id'] for doc in new_data],
@@ -54,8 +69,6 @@ collection = client.get_collection("youtube-transcriptions")
 #     documents=[doc['text'] for doc in new_data],
 # )
 
-print(collection.query(query_texts=["what is Openai CLIP?"], n_results=5))
+# collection = client.get_collection("teste")
 
-
-# del client
-# del collection
+# print(collection.peek())

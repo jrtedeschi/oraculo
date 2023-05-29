@@ -41,6 +41,7 @@ def combine_segments(segments, metadata: dict = {}, window: int = 6, stride: int
                 **{k: segments[i][k] for k in metadata.keys()},
             }
         )
+    logging.info("Combined segments: " + str(len(new_data)))
     return new_data
 
 
@@ -55,35 +56,41 @@ def create_embeddings(
             Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
         )
     # if metadata in empty dict, generate random metadata
-    if metadata == {}:
-        metadata = {"title": name_random_collection()}
-        if "collection_name" not in metadata:
-            collection_name = name_random_collection()
-            logging.info("Creating new Chroma collection: " + collection_name)
-            collection = client.create_or_get_collection(collection_name)
+
+    collections = get_collections(client)
+
+    if not metadata:
+        metadata = {"collection_name": name_random_collection()}
+        logging.info("Creating new Chroma collection: " + metadata["collection_name"])
+        if metadata["collection_name"] not in collections:
+            client.create_collection(metadata["collection_name"])
+            collection = client.get_collection(metadata["collection_name"])
         else:
-            collection = client.create_or_get_collection(metadata["collection_name"])
+            collection = client.get_collection(metadata["collection_name"])
     else:
-        collection = client.create_or_get_collection(metadata["collection_name"])
+        if metadata["collection_name"] not in collections:
+            logging.info(
+                "Creating new Chroma collection: " + metadata["collection_name"]
+            )
+            client.create_collection(metadata["collection_name"])
+            collection = client.get_collection(metadata["collection_name"])
+        else:
+            collection = client.get_collection(metadata["collection_name"])
 
     logging.info("Embedding documents...")
     segments = add_metadata_to_segments(segments, metadata)
     combined_segments = combine_segments(segments, metadata)
 
-    logging.info("Adding documents to collection: " + collection_name)
+    logging.info("Adding documents to collection: " + collection.name)
+
     collection.add(
         ids=[doc["id"] for doc in combined_segments],
         metadatas=[
-            {k: doc[k] for k in metadata.keys() + ["start", "end"]}
+            {k: doc[k] for k in [*metadata.keys(), "start", "end"]}
             for doc in combined_segments
         ],
         documents=[doc["text"] for doc in combined_segments],
     )
-
-    del client
-    del collection
-
-    return segments
 
 
 def get_collections(client=None):
@@ -92,8 +99,15 @@ def get_collections(client=None):
             Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
         )
         if client.list_collections() == []:
+            collections = []
             return []
 
         collections = [col.name for col in client.list_collections()]
-        del client
+    else:
+        if client.list_collections() == []:
+            collections = []
+            return []
+
+        collections = [col.name for col in client.list_collections()]
+
     return collections

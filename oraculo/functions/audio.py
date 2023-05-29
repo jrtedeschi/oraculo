@@ -12,6 +12,7 @@ def audio_to_text(
     output: str = None,
     embeddings: bool = False,
     metadata: dict = {},
+    client=None,
 ):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"Using device: {device}")
@@ -38,7 +39,9 @@ def audio_to_text(
 
     if embeddings:
         metadata["title"] = output.split("/")[-1]
+        logging.info("Creating embeddings for title: " + metadata["title"])
         create_embeddings(
             result["segments"],
             metadata=metadata,
+            client=client,
         )
