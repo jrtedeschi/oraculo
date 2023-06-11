@@ -21,6 +21,8 @@ app = typer.Typer()
 app_dir = typer.get_app_dir(APP_NAME)
 config_path: Path = Path(app_dir) / "config/config.yaml"
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 @app.command()
 def transcribe(
@@ -145,7 +147,17 @@ def bulk_transcribe(
 
 @app.command()
 def webapp():
-    subprocess.run(["streamlit", "run", "oraculo/webapp/hello_world.py"])
+    print("Starting webapp...")
+    print(f"BASE_DIR: {BASE_DIR}")
+    subprocess.run(
+        [
+            "streamlit",
+            "run",
+            f"{BASE_DIR}/oraculo/webapp/hello_world.py",
+            "--server.port=8501",
+            "--server.address=0.0.0.0",
+        ]
+    )
 
 
 @app.command()
