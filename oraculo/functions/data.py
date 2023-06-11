@@ -1,6 +1,6 @@
 import chromadb
 from chromadb.config import Settings
-import hashlib
+import uuid
 import logging
 from contextlib import closing
 from tqdm.auto import tqdm
@@ -18,7 +18,7 @@ def name_random_collection() -> str:
 def add_metadata_to_segments(segments: list[dict], metadata: dict = {}):
     for segment in tqdm(segments):
         # generate id
-        segment["id"] = hashlib.md5(segment["text"].encode("utf-8")).hexdigest()
+        segment["id"] = str(uuid.uuid4())
         segment.update(metadata)
     return segments
 
