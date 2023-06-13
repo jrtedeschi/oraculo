@@ -20,39 +20,26 @@ This application is particularly useful for professionals dealing with substanti
 
 You can install Oráculo with pip:
 
-## Instalação
 ```bash
 pip install oraculo
 ```
 
-## Instalação
-```bash
-pip install oraculo
-```
+## Usage:
 
+To start the Semantic Search Application, use the following command:
 
-## Uso 
-### Iniciar a Aplicação de Busca
 ```bash
 oraculo webapp
 ```
 
-### Iniciar Transcrição
-De um único arquivo
+To initiate a transcription for a single file:
+
 ```bash
 oraculo transcribe
 ```
-<<<<<<< HEAD
 
-De uma pasta
-```bash 
-oraculo bulk-transcribe
-```
+To initiate bulk transcription for a folder:
 
-=======
->>>>>>> 48f95a8 (Update Readme)
-
-De uma pasta
 ```bash 
 oraculo bulk-transcribe
 ```
