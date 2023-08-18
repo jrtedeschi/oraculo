@@ -3,6 +3,7 @@ import logging
 import torch  # install steps: pytorch.org
 import datetime
 from oraculo.functions.data import create_embeddings
+from pytube import YouTube
 
 
 def audio_to_text(
@@ -45,3 +46,30 @@ def audio_to_text(
             metadata=metadata,
             client=client,
         )
+
+
+def download_yt(url: str, output: str):
+    
+    #check path
+    if output is None:
+        output = "./"
+
+     
+    yt = YouTube(url)
+    logging.info(f"Downloading {yt.title}...")
+    yt.streams.filter(only_audio=True).first().download(output_path=output)
+    path = f"{output}/{yt.title}.mp4"
+    logging.info(f"Downloaded {yt.title} to {path}")
+
+    audio_info = (path, {
+        "title": yt.title,
+        "url": url,
+        "author": yt.author,
+        "length": yt.length,
+        "rating": yt.rating,
+        "views": yt.views,
+        "keywords": yt.keywords,
+        "description": yt.description,
+    })
+
+    return audio_info

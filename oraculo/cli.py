@@ -6,7 +6,7 @@ from chromadb.config import Settings
 from rich import print
 from pathlib import Path
 import yaml
-from oraculo.functions.audio import audio_to_text
+from oraculo.functions.audio import audio_to_text, download_yt
 from oraculo.functions.data import get_collections
 from typing_extensions import Annotated
 import logging
@@ -97,7 +97,8 @@ def bulk_transcribe(
     path = typer.prompt("Path to folder: ", default=None)
     language = typer.prompt("Input Audio Language: ", default="pt")
     model = typer.prompt("Model: ", default="base")
-    output = typer.prompt("Output folder path: ", default=None)
+    # default path is the same as input path
+    output = typer.prompt("Output folder path: ", default=path)
     metadata = {}
 
     client = chromadb.Client(
@@ -126,6 +127,7 @@ def bulk_transcribe(
         + glob.glob(path + "/*.wav")
         + glob.glob(path + "/*.m4a")
         + glob.glob(path + "/*.flac")
+        + glob.glob(path + "/*.mp4")
     )
 
     for file in track(files, "Transcribing... :hourglass:"):
@@ -158,6 +160,72 @@ def webapp():
             "--server.address=0.0.0.0",
         ]
     )
+
+
+
+@app.command()
+def transcribe_yt(
+    embeddings: Annotated[
+        bool,
+        typer.Option(
+            help="Create embeddings from the segments of the transcription and persists them to a vector database."
+        ),
+    ] = False,
+    collection: Annotated[
+        str,
+        typer.Option(
+            help="Name of the collection to persist the embeddings to. If the collection does not exist, a new collection will be created.",
+        ),
+    ] = None,
+):
+    path = typer.prompt("Folder path: ", default=None)
+    url = typer.prompt("Youtube URL: ", default=None)
+    language = typer.prompt("Input Audio Language: ", default="pt")
+    model = typer.prompt("Model: ", default="base")
+    metadata = {}
+
+    client = chromadb.Client(
+        Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
+    )
+
+    if embeddings:
+        # check if collections exist
+        collections = get_collections(client)
+        print("Collections found:")
+        print(collections)
+
+        if collection in collections:
+            print(f"Collection {collection} found.")
+            metadata = {"collection_name": collection}
+        else:
+            print(f"Collection not found. Creating new collection...")
+            if collection is None:
+                collection = typer.prompt("Enter collection name")
+                metadata = {"collection_name": collection}
+            else:
+                metadata = {"collection_name": collection}
+
+    print("Transcribing... :floppy_disk:")
+
+    # download video
+    audio_path , audio_metadata = download_yt(url, path)
+
+    if audio_path is None:
+        print("Download failed.")
+        return None
+
+    metadata = {**metadata, **audio_metadata}
+
+    audio_to_text(
+        path=audio_path,
+        language=language,
+        model=model,
+        output=path + "/" + audio_metadata["title"] + ".txt",
+        embeddings=embeddings,
+        metadata=metadata if embeddings else None,
+        client=client if embeddings else None,
+    )
+
 
 
 @app.command()
