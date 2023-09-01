@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "oraculo"
-version = "0.1.13"
+version = "0.1.14"
 description = "A project to use Sentence Transformers and embeddings to make a pocket search engine"
 authors = ["Joao Tedeschi <joaorafaelbt@gmail.com>"]
 readme = "README.md"

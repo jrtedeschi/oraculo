@@ -24,43 +24,70 @@ You can install Oráculo with pip:
 pip install oraculo
 ```
 
+<!-- Put exclamation emojis  -->
+## Setup:
+
+:warning::warning:**Warning**:warning::warning:: The following steps are required to run Oráculo. Please follow the steps carefully.
+
+Initialize the Oráculo application with the following command:
+
+```bash
+oraculo init
+```
+
+You will be prompted to enter the following information:
+<!-- table -->
+| Information | Description |
+| ----------- | ----------- |
+| ChromaDB Persist Directory | The directory where the ChromaDB will be stored. This is important to store vector embeddings of text|
+| ChromaDB Implementation | Defaults to `duckdb+parquet`. For more implementations, please refer to [Source Code](https://github.com/chroma-core/chroma/blob/main/chromadb/config.py) |
+
+
+Whenever you want to change the config file, just run the same command again.
+
 ## Usage:
 
+### Semantic Search:
 To start the Semantic Search Application, use the following command:
 
 ```bash
 oraculo webapp
 ```
 
+### Single File Transcription:
 To initiate a transcription for a single file:
 
 ```bash
 oraculo transcribe
 ```
 
+### Multiple File Transcription:
 To initiate bulk transcription for a folder:
 
 ```bash 
 oraculo bulk-transcribe
 ```
 
+to transcribe youtube videos:
+
+### YouTube Video Transcription:
+```bash
+oraculo transcribe-yt
+```
+
+
+--- 
+### Help:
 If you need help with the commands, use the following command:
 
 ```bash
 oraculo --help
 ```
 
-or
-    
-    ```bash
-    oraculo <command> --help
-    ```
-
-
 
 ## About
 
-- Version: 0.1.12
+- Version: 0.1.14
 - Author: Joao Tedeschi
 - Contact: joaorafaelbt@gmail.com
 
