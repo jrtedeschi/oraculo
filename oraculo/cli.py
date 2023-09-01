@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 from oraculo.functions.audio import audio_to_text, download_yt
 from oraculo.functions.data import get_collections
+from oraculo.functions.config import create_config
 from typing_extensions import Annotated
 import logging
 import glob
@@ -24,7 +25,27 @@ config_path: Path = Path(app_dir) / "config/config.yaml"
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-@app.command()
+@app.command(help="Initialize oraculo, set up config file.")
+def init():
+    if config_path.exists():
+        print("Config file already exists.")
+        print("Config file path: " + str(config_path))
+        print("Config file content:")
+        with open(config_path, "r") as f:
+            print(f.read())
+
+        option = typer.confirm("Do you want to overwrite the config file?")
+        if option:
+            create_config(config_path,)
+        else:
+            print("Exiting...")
+
+    else:
+        print("Initializing oraculo...")
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        create_config(config_path,)
+
+@app.command(help="Transcribe an audio file. Accepts .mp3, .wav, .m4a, .flac, .mp4 files. If the output file is not specified, the output file will be saved in the same folder as the input file.")
 def transcribe(
     embeddings: Annotated[
         bool,
@@ -42,7 +63,8 @@ def transcribe(
     path = typer.prompt("Path to audio file: ", default=None)
     language = typer.prompt("Input Audio Language: ", default="pt")
     model = typer.prompt("Model: ", default="base")
-    output = typer.prompt("Output file: ", default=None)
+    # default path is the same as input path but with .txt extension removing the audio extension
+    output = typer.prompt("Output file: ", default=path.split(".")[0] + ".txt")
     metadata = {}
 
     client = chromadb.Client(
@@ -79,7 +101,7 @@ def transcribe(
     )
 
 
-@app.command()
+@app.command(help="Transcribe all audio files in a folder. Accepts .mp3, .wav, .m4a, .flac, .mp4 files. If the output folder is not specified, the output files will be saved in the same folder as the input files.")
 def bulk_transcribe(
     embeddings: Annotated[
         bool,
