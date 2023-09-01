@@ -44,10 +44,24 @@ To initiate bulk transcription for a folder:
 oraculo bulk-transcribe
 ```
 
+If you need help with the commands, use the following command:
+
+```bash
+oraculo --help
+```
+
+or
+    
+    ```bash
+    oraculo <command> --help
+    ```
+
+
+
 ## About
 
-- Version: 0.1.11
+- Version: 0.1.12
 - Author: Joao Tedeschi
 - Contact: joaorafaelbt@gmail.com
 
-The development of Oráculo is aimed at evolving data analytics and information retrieval capabilities for businesses and individual users. Please feel free to reach out with any feedback or suggestions to improve Oráculo further.
+The development of Oráculo is aimed at information retrieval capabilities for businesses and individual users. Please feel free to reach out with any feedback or suggestions to improve Oráculo further.
