@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 from oraculo.functions.audio import audio_to_text, download_yt
 from oraculo.functions.data import get_collections
-from oraculo.functions.config import create_config
+from oraculo.functions.config import create_config, load_config
 from typing_extensions import Annotated
 import logging
 import glob
@@ -60,15 +60,21 @@ def transcribe(
         ),
     ] = None,
 ):
-    path = typer.prompt("Path to audio file: ", default=None)
+    path_str = typer.prompt("Path to audio file: ", default=None)
+    path = Path(path_str)
     language = typer.prompt("Input Audio Language: ", default="pt")
     model = typer.prompt("Model: ", default="base")
     # default path is the same as input path but with .txt extension removing the audio extension
-    output = typer.prompt("Output file: ", default=path.split(".")[0] + ".txt")
+    output = typer.prompt("Output file: ", default=path.parent / f"{path.stem}.txt")
     metadata = {}
 
+    config = load_config(config_path)
+
+    persist_directory = config["chromadb"]["persist_directory"]
+    chroma_db_impl = config["chromadb"]["chroma_db_impl"]
+
     client = chromadb.Client(
-        Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
+        Settings(persist_directory=persist_directory, chroma_db_impl=chroma_db_impl)
     )
 
     if embeddings:
@@ -116,15 +122,21 @@ def bulk_transcribe(
         ),
     ] = None,
 ):
-    path = typer.prompt("Path to folder: ", default=None)
+    path_str = typer.prompt("Path to folder: ", default=None)
+    path = Path(path_str)
     language = typer.prompt("Input Audio Language: ", default="pt")
     model = typer.prompt("Model: ", default="base")
     # default path is the same as input path
     output = typer.prompt("Output folder path: ", default=path)
     metadata = {}
 
+    config = load_config(config_path)
+
+    persist_directory = config["chromadb"]["persist_directory"]
+    chroma_db_impl = config["chromadb"]["chroma_db_impl"]
+
     client = chromadb.Client(
-        Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
+        Settings(persist_directory=persist_directory, chroma_db_impl=chroma_db_impl)
     )
 
     if embeddings:
@@ -144,18 +156,14 @@ def bulk_transcribe(
             else:
                 metadata = {"collection_name": collection}
     # read all files in folder that have .mp3, .wav, .m4a, .flac extension
-    files = (
-        glob.glob(path + "/*.mp3")
-        + glob.glob(path + "/*.wav")
-        + glob.glob(path + "/*.m4a")
-        + glob.glob(path + "/*.flac")
-        + glob.glob(path + "/*.mp4")
-    )
+    # Glob the folder for supported audio formats
+    audio_extensions = ['mp3', 'wav', 'm4a', 'flac', 'mp4']
+    files = [f for ext in audio_extensions for f in path.glob(f'*.{ext}')]
 
     for file in track(files, "Transcribing... :hourglass:"):
-        filename = file.split("/")[-1].split(".")[0]
-        output_file = f"{output}/{filename}.txt"
-
+        filename = file.stem  # Gets the filename without the extension
+        output_file = path / f"{filename}.txt"  # Use pathlib to form a new Path object
+        
         print(f"Transcribing {filename}...")
 
         audio_to_text(
@@ -177,7 +185,7 @@ def webapp():
         [
             "streamlit",
             "run",
-            f"{BASE_DIR}/oraculo/webapp/hello_world.py",
+            str(BASE_DIR / "oraculo/webapp.py"),
             "--server.port=8501",
             "--server.address=0.0.0.0",
         ]
@@ -200,15 +208,22 @@ def transcribe_yt(
         ),
     ] = None,
 ):
-    path = typer.prompt("Folder path: ", default=None)
+    path_str = typer.prompt("Folder path: ", default=None)
+    path = Path(path_str)
     url = typer.prompt("Youtube URL: ", default=None)
     language = typer.prompt("Input Audio Language: ", default="pt")
     model = typer.prompt("Model: ", default="base")
     metadata = {}
 
+    config = load_config(config_path)
+
+    persist_directory = config["chromadb"]["persist_directory"]
+    chroma_db_impl = config["chromadb"]["chroma_db_impl"]
+
     client = chromadb.Client(
-        Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
+        Settings(persist_directory=persist_directory, chroma_db_impl=chroma_db_impl)
     )
+
 
     if embeddings:
         # check if collections exist
@@ -242,7 +257,7 @@ def transcribe_yt(
         path=audio_path,
         language=language,
         model=model,
-        output=path + "/" + audio_metadata["title"] + ".txt",
+        output=path / f"{audio_path.stem}.txt",
         embeddings=embeddings,
         metadata=metadata if embeddings else None,
         client=client if embeddings else None,
