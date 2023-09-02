@@ -8,11 +8,16 @@ import logging
 from typing import List
 import pandas as pd
 from chromadb.api.types import QueryResult
+from oraculo.functions.config import load_config
+from pathlib import Path
 
 
+config_path = Path.cwd() / "config/config.yaml"
+
+config = load_config(config_path)
 def init_db():
     client = chromadb.Client(
-        Settings(persist_directory=".chromadb", chroma_db_impl="duckdb+parquet")
+        Settings(persist_directory=config["chromadb"]["persist_directory"], chroma_db_impl=config["chromadb"]["chroma_db_impl"])
     )
     collections = client.list_collections()
     del client

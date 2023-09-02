@@ -3,14 +3,16 @@ import logging
 import torch  # install steps: pytorch.org
 import datetime
 from oraculo.functions.data import create_embeddings
+from pathlib import Path
+from typing import Union
 from pytube import YouTube
 
 
 def audio_to_text(
-    path: str,
+    path: Path,
     language: str = "pt",
     model: str = "base",
-    output: str = None,
+    output: Path = None,
     embeddings: bool = False,
     metadata: dict = {},
     client=None,
@@ -20,8 +22,10 @@ def audio_to_text(
 
     model = whisper.load_model("small")
 
+    path_str = str(path)
+
     result = model.transcribe(
-        path,
+        path_str,
         word_timestamps=True,
         verbose=True,
         **{"task": "transcribe", "language": language, "fp16": False},
@@ -29,7 +33,7 @@ def audio_to_text(
 
     # if output is None get filename from path
     if output is None:
-        output = path.split(".")[0] + ".txt"
+        output = path.parent / f"{path.stem}.txt"
 
     with open(output, "w") as f:
         for segment in result["segments"]:
@@ -39,7 +43,7 @@ def audio_to_text(
             f.write(f"[{start} --> {end}]\t {segment['text']}\n")
 
     if embeddings:
-        metadata["title"] = output.split("/")[-1]
+        metadata["title"] = path.stem
         logging.info("Creating embeddings for title: " + metadata["title"])
         create_embeddings(
             result["segments"],
@@ -48,18 +52,18 @@ def audio_to_text(
         )
 
 
-def download_yt(url: str, output: str):
+def download_yt(url: str, output: Path):
     
     #check path
     if output is None:
-        output = "./"
+        output = Path.cwd()
 
      
     yt = YouTube(url)
     logging.info(f"Downloading {yt.title}...")
     yt.streams.filter(only_audio=True).first().download(output_path=output)
-    path = f"{output}/{yt.title}.mp4"
-    logging.info(f"Downloaded {yt.title} to {path}")
+    path = output / f"{yt.title}.mp4"
+    logging.info(f"Downloaded {yt.title} to {path.as_posix()}")
 
     audio_info = (path, {
         "title": yt.title,
