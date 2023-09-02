@@ -11,10 +11,12 @@ This application is particularly useful for professionals dealing with substanti
 
 ## Requirements:
 
+<!-- create an admonition for it -->
+:warning: IMPORTANT :warning: In order to run Oráculo, you need to have the following requirements installed on your machine:
+
 - Python 3.10
 - FFmpeg
 - Git
-- Docker (in future)
 
 ## Installation:
 
@@ -24,7 +26,6 @@ You can install Oráculo with pip:
 pip install oraculo
 ```
 
-<!-- Put exclamation emojis  -->
 ## Setup:
 
 :warning::warning:**Warning**:warning::warning:: The following steps are required to run Oráculo. Please follow the steps carefully.
