@@ -276,6 +276,37 @@ def test():
         metadata={"collection_name": "teste"},
     )
 
+@app.command(help="Converts files with different video formats to .mp4")
+def convert_video(bulk : Annotated[bool, typer.Option(help="Converts all files with video extensions in a folder")] = False, output_directory : Annotated[str, typer.Option(help="Output folder path")] = None):
+
+    if bulk:
+        path_str = typer.prompt("Source Directory Path: ", default=None)
+        path = Path(path_str)
+        audio_extensions = ['mp3', 'wav', 'm4a', 'flac', 'mp4', 'mkv', 'avi']
+        files = [f for ext in audio_extensions for f in path.glob(f'*.{ext}')]
+
+        if output_directory is None:
+            output = path
+        else:
+            output = Path(output_directory)
+
+        for file in track(files, "Converting... :hourglass:"):
+            filename = file.stem
+            output_file = output / f"{filename}.mp4"
+            print(f"Converting {filename}...")
+            subprocess.run(["ffmpeg", "-i", file, output_file])
+    else:
+        path_str = typer.prompt("Source File Path: ", default=None)
+        path = Path(path_str)
+        if output_directory is None:
+            output = path.parent
+        else:
+            output = Path(output_directory)
+        filename = path.stem
+        output_file = output / f"{filename}.mp4"
+        print(f"Converting {filename}...")
+        subprocess.run(["ffmpeg", "-i", path, output_file])
+
 
 if __name__ == "__main__":
     app()
