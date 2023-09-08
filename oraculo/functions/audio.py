@@ -20,7 +20,7 @@ def audio_to_text(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     logging.info(f"Using device: {device}")
 
-    model = whisper.load_model("small")
+    model = whisper.load_model(model, device=device)
 
     path_str = str(path)
 

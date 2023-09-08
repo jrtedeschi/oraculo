@@ -20,6 +20,7 @@ APP_NAME = "oraculo"
 app = typer.Typer()
 
 app_dir = typer.get_app_dir(APP_NAME)
+print("App directory: " + app_dir)
 config_path: Path = Path(app_dir) / "config/config.yaml"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -185,7 +186,7 @@ def webapp():
         [
             "streamlit",
             "run",
-            str(BASE_DIR / "oraculo/webapp.py"),
+            str(BASE_DIR / "oraculo/webapp/search.py"),
             "--server.port=8501",
             "--server.address=0.0.0.0",
         ]

@@ -49,6 +49,7 @@ def create_embeddings(
     segments: list[dict],
     metadata: dict = {},
     client=None,
+    window: int = 6,
 ):
     if client is None:
         logging.info("Creating new Chroma client")
@@ -79,7 +80,7 @@ def create_embeddings(
 
     logging.info("Embedding documents...")
     segments = add_metadata_to_segments(segments, metadata)
-    combined_segments = combine_segments(segments, metadata)
+    combined_segments = combine_segments(segments, metadata, window)
 
     logging.info("Adding documents to collection: " + collection.name)
 

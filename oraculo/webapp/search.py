@@ -10,9 +10,13 @@ import pandas as pd
 from chromadb.api.types import QueryResult
 from oraculo.functions.config import load_config
 from pathlib import Path
+import typer
 
 
-config_path = Path.cwd() / "config/config.yaml"
+APP_NAME = "oraculo"
+app_dir = typer.get_app_dir(APP_NAME)
+print("App directory: " + app_dir)
+config_path: Path = Path(app_dir) / "config/config.yaml"
 
 config = load_config(config_path)
 def init_db():
@@ -70,6 +74,11 @@ def create_streamlit_card(json_data):
             st.write(f"{key.capitalize()}: {value}")
     st.write("---")
 
+title = st.sidebar.title("Search Collections")
+
+title = st.title("Semantic Search")
+
+st.write("Instruções de uso:", "\n1. Selecione uma coleção", "\n2. Digite uma consulta", "\n3. Selecione o número de resultados", "\n4. Clique em 'Search'")
 
 # create a dropdown menu with all the collections
 collection_name = st.sidebar.selectbox(
