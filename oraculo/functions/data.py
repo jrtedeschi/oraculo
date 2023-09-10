@@ -60,6 +60,25 @@ def create_embeddings(
 
     collections = get_collections(client)
 
+    # if metadata is empty, generate random metadata
+    metadata, collection = check_collection(metadata, client, collections)
+
+    logging.info("Embedding documents...")
+    segments = add_metadata_to_segments(segments, metadata)
+    combined_segments = combine_segments(segments, metadata, window)
+
+    logging.info("Adding documents to collection: " + collection.name)
+
+    collection.add(
+        ids=[doc["id"] for doc in combined_segments],
+        metadatas=[
+            {k: doc[k] for k in [*metadata.keys(), "start", "end"]}
+            for doc in combined_segments
+        ],
+        documents=[doc["text"] for doc in combined_segments],
+    )
+
+def check_collection(metadata, client, collections):
     if not metadata:
         metadata = {"collection_name": name_random_collection()}
         logging.info("Creating new Chroma collection: " + metadata["collection_name"])
@@ -77,21 +96,7 @@ def create_embeddings(
             collection = client.get_collection(metadata["collection_name"])
         else:
             collection = client.get_collection(metadata["collection_name"])
-
-    logging.info("Embedding documents...")
-    segments = add_metadata_to_segments(segments, metadata)
-    combined_segments = combine_segments(segments, metadata, window)
-
-    logging.info("Adding documents to collection: " + collection.name)
-
-    collection.add(
-        ids=[doc["id"] for doc in combined_segments],
-        metadatas=[
-            {k: doc[k] for k in [*metadata.keys(), "start", "end"]}
-            for doc in combined_segments
-        ],
-        documents=[doc["text"] for doc in combined_segments],
-    )
+    return metadata,collection
 
 
 def get_collections(client=None):

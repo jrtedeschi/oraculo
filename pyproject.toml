@@ -29,6 +29,7 @@ duckdb-engine = "^0.7.0"
 duckdb = "^0.7.1"
 openai-whisper = "^20230314"
 pytube = "^15.0.0"
+pypdf = "^3.15.5"
 
 
 [build-system]
