@@ -9,6 +9,7 @@ import yaml
 from oraculo.functions.audio import audio_to_text, download_yt
 from oraculo.functions.data import get_collections
 from oraculo.functions.config import create_config, load_config
+from oraculo.functions.text import read_batch_pdf, read_pdf, load_pdf
 from typing_extensions import Annotated
 import logging
 import glob
@@ -307,6 +308,39 @@ def convert_video(bulk : Annotated[bool, typer.Option(help="Converts all files w
         output_file = output / f"{filename}.mp4"
         print(f"Converting {filename}...")
         subprocess.run(["ffmpeg", "-i", path, output_file])
+
+@app.command(help="Loads and reads a PDF file, or a collection of PDF files in a folder.")
+def read_pdf(
+    bulk: Annotated[
+        bool,
+        typer.Option(
+            help="Read all PDF files in a folder. If false, read a single PDF file."
+        ),
+    ] = False,
+    collection_name: Annotated[
+        str,
+        typer.Option(
+            help="Name of the collection to persist the embeddings to. If the collection does not exist, a new collection will be created.",
+        ),
+    ] = None,
+    embeddings: Annotated[
+        bool,
+        typer.Option(
+            help="Create embeddings from the segments of the transcription and persists them to a vector database."
+        ),
+    ] = False,
+):
+    if bulk:
+        path_str = typer.prompt("Folder path: ", default=None)
+        path = Path(path_str)
+        # Glob the folder for supported audio formats
+        pdf_extensions = ['pdf']
+        files = [f for ext in pdf_extensions for f in path.glob(f'*.{ext}')]
+
+        for file in track(files, "Reading... :hourglass:"):
+            filename = file.stem
+            print(f"Reading {filename}...")
+            
 
 
 if __name__ == "__main__":
